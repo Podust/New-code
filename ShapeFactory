@@ -1,0 +1,314 @@
+ public class ShapeFactory {
+ 
+-   public Shape shape;
+-   public BasicStroke stroke = new BasicStroke(3.0F);
+-   public Paint paint;
+-   public int width = 25;
+-   public int height = 25;
++	public Shape shape;
++	public BasicStroke stroke = new BasicStroke(3.0F);
++	public Paint paint;
++	public int width = 25;
++	public int height = 25;
+ 
+-   /**
+-    * Êîíñòðóêòîð êëàññà, ñîçäàþùèé â ïðîöåññå ðàáîòû
+-    * ãåîìåòðè÷åñêóþ ôèãóðó - shape
+-    * @param shape_type Äâóçíà÷íîå ÷èñëî, îïðåäåëÿþùåå òèï ôèãóðû:
+-    * 1é ðàçðÿä - ôîðìà ôèãóðû
+-    * 2é ðàçðÿä - òèï ëèíèè, îáðàçóþùåé ôèãóðó
+-    */
+-   public ShapeFactory(int shape_type) {
+-      switch(shape_type / 10) {
+-      case 1:
+-         this.shape = createStar(3, new Point(0, 0), (double)this.width / 2.0D, (double)this.width / 2.0D);
+-         break;
+-      case 2:
+-      case 4:
+-      case 6:
+-      case 8:
+-      default:
+-         throw new Error("type is nusupported");
+-      case 3:
+-         this.shape = createStar(5, new Point(0, 0), (double)this.width / 2.0D, (double)this.width / 4.0D);
+-         break;
+-      case 5:
+-         this.shape = new Double((double)(-this.width) / 2.0D, (double)(-this.height) / 2.0D, (double)this.width, (double)this.height);
+-         break;
+-      case 7:
+-         GeneralPath path = new GeneralPath();
+-         double tmp_height = Math.sqrt(2.0D) / 2.0D * (double)this.height;
+-         path.moveTo((double)(-this.width / 2), -tmp_height);
+-         path.lineTo(0.0D, -tmp_height);
+-         path.lineTo((double)(this.width / 2), tmp_height);
+-         path.closePath();
+-         this.shape = path;
+-         break;
+-      case 9:
+-         this.shape = new java.awt.geom.Arc2D.Double((double)(-this.width) / 2.0D, (double)(-this.height) / 2.0D, (double)this.width, (double)this.height, 30.0D, 300.0D, 2);
+-      }
+-
+-      switch(shape_type % 10) {
+-      case 1:
+-         this.stroke = new BasicStroke(3.0F);
+-         break;
+-      case 2:
+-      case 5:
+-      case 6:
+-      default:
+-         throw new Error("type is nusupported");
+-      case 3:
+-         break;
+-      case 4:
+-         this.stroke = new BasicStroke(7.0F);
+-         break;
+-      case 7:
+-         this.paint = new GradientPaint((float)(-this.width), (float)(-this.height), Color.white, (float)this.width, (float)this.height, Color.gray, true);
+-         break;
+-      case 8:
+-         this.paint = Color.red;
+-      }
+-
+-   }
++	public static enum ShapeForm {
++		HEXAGON, // 1
++		FIVESTAR, // 3
++		SQUARE, // 5
++		TRIANGLE, // 7
++		PACMAN, // 9
++		
++		NULL
++	}
+ 
+-   /**
+-    * Ôóíêöèÿ ñîçäàåò íà îñíîâå çàäàííûõ ïàðàìåòðîâ
+-    * ïðàâèëüíûé n-óãîëüíèê
+-    * @param arms ×èñëî äâîéíûõ ðåáåð
+-    * @param center Òî÷êà, â êîòîðîé íàõîäèòñÿ öåíòð
+-    * @param rOuter Âíåøíèé ðàäèóñ
+-    * @param rInner Âíóòðåííèé ðàäèóñ
+-    * @return
+-    */
+-   private static Shape createStar(int arms, Point center, double rOuter, double rInner) {
+-      double angle = 3.141592653589793D / (double)arms;
+-      GeneralPath path = new GeneralPath();
+-
+-      for(int i = 0; i < 2 * arms; ++i) {
+-         double r = (i & 1) == 0?rOuter:rInner;
+-         java.awt.geom.Point2D.Double p = new java.awt.geom.Point2D.Double((double)center.x + Math.cos((double)i * angle) * r, (double)center.y + Math.sin((double)i * angle) * r);
+-         if(i == 0) {
+-            path.moveTo(p.getX(), p.getY());
+-         } else {
+-            path.lineTo(p.getX(), p.getY());
+-         }
+-      }
+-
+-      path.closePath();
+-      return path;
+-   }
++	public static enum StrokeType {
++		THIN, // 1
++		DEFAULT, // 3
++		THICK, // 4
++		
++		NULL
++	}
++
++	public static enum PaintType {
++		GRADIENT, // 7
++		RED, // 8
++		
++		NULL
++	}
++
++	/**
++	 * Êîíñòðóêòîð, èíèöèàëèçèðóþùèé îáúåêò ïî ãîòîâîìó ýêçåìïëÿðó shape
++	 * Ïîñêîëüêó äëÿ ïàðàìåòðîâ stroke è paint ïîçâîëèòåëüíî çíà÷åíèå null,
++	 * òî îíè íå óêàçûâàþòñÿ â êîíñòðóêòîðå
++	 * @param shape
++	 */
++	public ShapeFactory (Shape shape)
++	{
++		this.shape = shape;
++	}
++	
++	/**
++	 * Êîíñòðóêòîð, èíèöèàëèçèðóþùèé îáúåêò ïî îäíîìó èç çíà÷åíèé enum'a
++	 * @param ShapeForm îäíî èç çíà÷åíèé ShapeFactory.ShapeForm
++	 */
++	public ShapeFactory (ShapeForm form)
++	{
++		initByShapeForm (form);
++	}
++
++	/**@deprecated
++	 * Ýòîò êîíñòðóêòîð ÿâëÿåòñÿ óñòàðåâøèì è ñîõðàíåí äëÿ ñîâìåñòèìîñòè
++	 * Èñïîëüçóéòå ShapeFactory (ShapeForm form)
++	 * 
++	 * @param shape_type
++	 *            Äâóçíà÷íîå ÷èñëî, îïðåäåëÿþùåå òèï ôèãóðû: 1é ðàçðÿä - ôîðìà
++	 *            ôèãóðû 2é ðàçðÿä - òèï ëèíèè, îáðàçóþùåé ôèãóðó
++	 */
++	@Deprecated public ShapeFactory(int shape_type) {
++		switch (shape_type / 10) {
++		case 1:
++			initByShapeForm (ShapeForm.HEXAGON);
++			break;
++		case 3:
++			initByShapeForm (ShapeForm.FIVESTAR);
++			break;
++		case 5:
++			initByShapeForm (ShapeForm.SQUARE);
++			break;
++		case 7:
++			initByShapeForm (ShapeForm.TRIANGLE);
++			break;
++		case 9:
++			initByShapeForm (ShapeForm.PACMAN);
++			break;
++		default:
++			initByShapeForm (null);
++			break;
++		}
++
++		switch (shape_type % 10) {
++		case 1:
++			setStroke(StrokeType.THIN);
++			break;
++		case 3:
++			setStroke(StrokeType.DEFAULT);
++			break;
++		case 4:
++			setStroke(StrokeType.THICK);
++			break;
++		case 7:
++			setPaint(PaintType.GRADIENT);
++			break;
++		case 8:
++			setPaint(PaintType.RED);
++			break;
++		default:
++			setStroke(StrokeType.NULL);
++			setPaint(PaintType.NULL);
++			break;
++		}
++	}
++
++	private void initByShapeForm (ShapeForm form)
++	{
++		if (form == null) form = ShapeForm.NULL;
++		switch (form)
++		{
++		case HEXAGON:
++			this.shape = createStar(3, new Point(0, 0),
++					(double) this.width / 2.0D, (double) this.width / 2.0D);
++			break;
++		case FIVESTAR:
++			this.shape = createStar(5, new Point(0, 0),
++					(double) this.width / 2.0D, (double) this.width / 4.0D);
++			break;
++		case SQUARE:
++			this.shape = new Double((double) (-this.width) / 2.0D,
++					(double) (-this.height) / 2.0D, (double) this.width,
++					(double) this.height);
++			break;
++		case TRIANGLE:
++			GeneralPath path = new GeneralPath();
++			double tmp_height = Math.sqrt(2.0D) / 2.0D * (double) this.height;
++			path.moveTo((double) (-this.width / 2), -tmp_height);
++			path.lineTo(0.0D, -tmp_height);
++			path.lineTo((double) (this.width / 2), tmp_height);
++			path.closePath();
++			this.shape = path;
++			break;
++		case PACMAN:
++			this.shape = new java.awt.geom.Arc2D.Double(
++					(double) (-this.width) / 2.0D,
++					(double) (-this.height) / 2.0D, (double) this.width,
++					(double) this.height, 30.0D, 300.0D, 2);
++			break;
++		default:
++			throw new Error("type is nusupported");
++		}
++	}
++	
++	public void setStroke(BasicStroke stroke)
++	{
++		this.stroke = stroke;
++	}
++	
++	public void setStroke(StrokeType type)
++	{
++		if (type == null) type = StrokeType.NULL;
++		switch (type)
++		{
++			case DEFAULT:
++			case THIN:
++				this.stroke = new BasicStroke(3.0F);
++				break;
++			case THICK:
++				this.stroke = new BasicStroke(7.0F);
++				break;
++			default:
++				throw new Error("type is unsupported");
++		}
++	}
++	
++	public void setPaint(Paint paint)
++	{
++		this.paint = paint;
++	}
++	
++	public void setPaint(PaintType type)
++	{
++		if (type == null) type = PaintType.NULL;
++		switch (type)
++		{
++		case GRADIENT:
++			this.paint = new GradientPaint((float) (-this.width),
++					(float) (-this.height), Color.white, (float) this.width,
++					(float) this.height, Color.gray, true);
++			break;
++		case RED:
++			this.paint = Color.red;
++			break;
++		default:
++			throw new Error("type is unsupported");	
++		}
++			
++	}
++	
++
++	/**
++	 * Ôóíêöèÿ ñîçäàåò íà îñíîâå çàäàííûõ ïàðàìåòðîâ ïðàâèëüíûé n-óãîëüíèê
++	 * 
++	 * @param arms
++	 *            ×èñëî äâîéíûõ ðåáåð
++	 * @param center
++	 *            Òî÷êà, â êîòîðîé íàõîäèòñÿ öåíòð
++	 * @param rOuter
++	 *            Âíåøíèé ðàäèóñ
++	 * @param rInner
++	 *            Âíóòðåííèé ðàäèóñ
++	 * @return
++	 */
++	private static Shape createStar(int arms, Point center, double rOuter,
++			double rInner) {
++		double angle = 3.141592653589793D / (double) arms;
++		GeneralPath path = new GeneralPath();
++
++		for (int i = 0; i < 2 * arms; ++i) {
++			double r = (i & 1) == 0 ? rOuter : rInner;
++			java.awt.geom.Point2D.Double p = new java.awt.geom.Point2D.Double(
++					(double) center.x + Math.cos((double) i * angle) * r,
++					(double) center.y + Math.sin((double) i * angle) * r);
++			if (i == 0) {
++				path.moveTo(p.getX(), p.getY());
++			} else {
++				path.lineTo(p.getX(), p.getY());
++			}
++		}
++
++		path.closePath();
++		return path;
++	}
